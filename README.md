@@ -1,5 +1,5 @@
 # DNS MITM Manager
-[![Latest Release](https://img.shields.io/github/v/release/JP3402/libnx-abi-patcher)](https://github.com/JP3402/libnx-abi-patcher/releases/latest)
+[![Latest Release](https://img.shields.io/github/v/release/JP3402/DNS-MITM-Manager)]([https://github.com/JP3402/libnx-abi-patcher/releases/latest](https://github.com/JP3402/DNS-MITM-Manager/releases/latest)
 
 A simple homebrew application for the Nintendo Switch to manage DNS MITM hosts files used by Atmosphere.
 
