@@ -112,26 +112,6 @@ int main(int argc, char* argv[])
 {
     consoleInit(NULL);
 
-    const char *potential_files[] = {
-        "/atmosphere/hosts/default.txt",
-        "/atmosphere/hosts/emummc.txt",
-        "/atmosphere/hosts/sysmmc.txt"
-    };
-    char *found_files[3];
-    int num_host_files = 0;
-    for (int i = 0; i < 3; i++) {
-        if (file_exists(potential_files[i])) {
-            found_files[num_host_files] = (char*)potential_files[i];
-            num_host_files++;
-        }
-    }
-
-    int selected_file = 0;
-    char chosen_file[256] = "";
-
-    HostEntry entries[100]; // Array to hold host entries
-    int num_entries = -1;
-
     // Configure our supported input layout: a single player with standard controller styles
     padConfigureInput(1, HidNpadStyleSet_NpadStandard);
 
@@ -139,161 +119,176 @@ int main(int argc, char* argv[])
     PadState pad;
     padInitializeDefault(&pad);
 
-    if (num_host_files == 0) {
-        printf("\x1b[2J");
-        printf("No hosts files found in /atmosphere/hosts/.\n");
-        printf("Please create default.txt, emummc.txt, or sysmmc.txt.\n\n");
-        printf("Press + to exit.");
-        consoleUpdate(NULL);
-        while(appletMainLoop()) {
-            padUpdate(&pad);
-            u64 kDown = padGetButtonsDown(&pad);
-            if (kDown & HidNpadButton_Plus) {
-                break;
-            }
-        }
-        consoleExit(NULL);
-        return 0;
-    }
-
-    // File selection loop
     while(appletMainLoop()) {
-        padUpdate(&pad);
-        u64 kDown = padGetButtonsDown(&pad);
-
-        if (kDown & HidNpadButton_Plus) {
-            consoleExit(NULL);
-            return 0;
-        }
-
-        if (kDown & HidNpadButton_Up) {
-            selected_file--;
-            if (selected_file < 0) {
-                selected_file = num_host_files - 1;
+        const char *potential_files[] = {
+            "/atmosphere/hosts/default.txt",
+            "/atmosphere/hosts/emummc.txt",
+            "/atmosphere/hosts/sysmmc.txt"
+        };
+        char *found_files[3];
+        int num_host_files = 0;
+        for (int i = 0; i < 3; i++) {
+            if (file_exists(potential_files[i])) {
+                found_files[num_host_files] = (char*)potential_files[i];
+                num_host_files++;
             }
         }
 
-        if (kDown & HidNpadButton_Down) {
-            selected_file++;
-            if (selected_file >= num_host_files) {
-                selected_file = 0;
-            }
-        }
+        int selected_file = 0;
+        char chosen_file[256] = "";
 
-        if (kDown & HidNpadButton_A) {
-            strncpy(chosen_file, found_files[selected_file], sizeof(chosen_file) - 1);
-            chosen_file[sizeof(chosen_file) - 1] = '\0';
+        if (num_host_files == 0) {
+            printf("\x1b[2J");
+            printf("No hosts files found in /atmosphere/hosts/.\n");
+            printf("Please create default.txt, emummc.txt, or sysmmc.txt.\n\n");
+            printf("Press + to exit.");
+            consoleUpdate(NULL);
+            while(appletMainLoop()) {
+                padUpdate(&pad);
+                u64 kDown = padGetButtonsDown(&pad);
+                if (kDown & HidNpadButton_Plus) {
+                    break;
+                }
+            }
             break;
         }
 
-        printf("\x1b[2J");
-        printf("Select a hosts file to edit:\n\n");
+        // File selection loop
+        while(appletMainLoop()) {
+            padUpdate(&pad);
+            u64 kDown = padGetButtonsDown(&pad);
 
-        for (int i = 0; i < num_host_files; i++) {
-            if (i == selected_file) {
-                printf("> ");
-            } else {
-                printf("  ");
+            if (kDown & HidNpadButton_Plus) {
+                break;
             }
-            printf("%s\n", found_files[i]);
-        }
-        
-        printf("\nPress A to select, + to exit.");
 
-        consoleUpdate(NULL);
-    }
-
-    // If no file was chosen (user exited with +), terminate.
-    if (strlen(chosen_file) == 0) {
-        consoleExit(NULL);
-        return 0;
-    }
-
-    num_entries = read_hosts_file(chosen_file, entries, 100);
-
-    int selected_entry = 0;
-    char saved_message[20] = "";
-
-    // Main loop
-    while (appletMainLoop())
-    {
-        // Scan the gamepad. This should be done once for each frame
-        padUpdate(&pad);
-
-        // padGetButtonsDown returns the set of buttons that have been
-        // newly pressed in this frame compared to the previous one
-        u64 kDown = padGetButtonsDown(&pad);
-
-        if (kDown & HidNpadButton_Plus)
-            break; // break in order to return to hbmenu
-
-        if (num_entries > 0) {
             if (kDown & HidNpadButton_Up) {
-                selected_entry--;
-                if (selected_entry < 0) {
-                    selected_entry = num_entries - 1;
+                selected_file--;
+                if (selected_file < 0) {
+                    selected_file = num_host_files - 1;
                 }
             }
 
             if (kDown & HidNpadButton_Down) {
-                selected_entry++;
-                if (selected_entry >= num_entries) {
-                    selected_entry = 0;
+                selected_file++;
+                if (selected_file >= num_host_files) {
+                    selected_file = 0;
                 }
             }
 
             if (kDown & HidNpadButton_A) {
-                entries[selected_entry].enabled = !entries[selected_entry].enabled;
+                strncpy(chosen_file, found_files[selected_file], sizeof(chosen_file) - 1);
+                chosen_file[sizeof(chosen_file) - 1] = '\0';
+                break;
+            }
+
+            printf("\x1b[2J");
+            printf("Select a hosts file to edit:\n\n");
+
+            for (int i = 0; i < num_host_files; i++) {
+                if (i == selected_file) {
+                    printf("> ");
+                } else {
+                    printf("  ");
+                }
+                printf("%s\n", found_files[i]);
             }
             
-            if (kDown & HidNpadButton_Y) {
-                if (write_hosts_file(chosen_file, entries, num_entries)) {
-                    strcpy(saved_message, "Saved!");
-                } else {
-                    strcpy(saved_message, "Error saving!");
+            printf("\nPress A to select, + to exit.");
+
+            consoleUpdate(NULL);
+        }
+
+        if (strlen(chosen_file) == 0) {
+            break;
+        }
+
+        HostEntry entries[100]; // Array to hold host entries
+        int num_entries = read_hosts_file(chosen_file, entries, 100);
+
+        int selected_entry = 0;
+        char saved_message[20] = "";
+
+        // Editor loop
+        while (appletMainLoop())
+        {
+            padUpdate(&pad);
+            u64 kDown = padGetButtonsDown(&pad);
+
+            if (kDown & HidNpadButton_Plus) {
+                goto exit_app;
+            }
+
+            if (kDown & HidNpadButton_B) {
+                break; // Return to file selection
+            }
+
+            if (num_entries > 0) {
+                if (kDown & HidNpadButton_Up) {
+                    selected_entry--;
+                    if (selected_entry < 0) {
+                        selected_entry = num_entries - 1;
+                    }
                 }
-                num_entries = read_hosts_file(chosen_file, entries, 100);
-            } else if (kDown) {
-                strcpy(saved_message, "");
+
+                if (kDown & HidNpadButton_Down) {
+                    selected_entry++;
+                    if (selected_entry >= num_entries) {
+                        selected_entry = 0;
+                    }
+                }
+
+                if (kDown & HidNpadButton_A) {
+                    entries[selected_entry].enabled = !entries[selected_entry].enabled;
+                }
+                
+                if (kDown & HidNpadButton_Y) {
+                    if (write_hosts_file(chosen_file, entries, num_entries)) {
+                        strcpy(saved_message, "Saved!");
+                    } else {
+                        strcpy(saved_message, "Error saving!");
+                    }
+                    num_entries = read_hosts_file(chosen_file, entries, 100);
+                } else if (kDown) {
+                    strcpy(saved_message, "");
+                }
             }
-        }
 
-        // Your code goes here
-        printf("\x1b[2J");
-        
-        // Print instructions
-        printf("DNS MITM Manager - %s\n", chosen_file);
-        printf("Use D-Pad Up/Down to select an entry.\n");
-        printf("Press A to toggle an entry on or off.\n");
-        printf("Press Y to save changes.\n");
-        printf("Press + to exit.\n\n");
+            printf("\x1b[2J");
+            
+            printf("DNS MITM Manager - %s\n", chosen_file);
+            printf("Use D-Pad Up/Down to select an entry.\n");
+            printf("Press A to toggle an entry on or off.\n");
+            printf("Press Y to save changes.\n");
+            printf("Press B to go back. Press + to exit.\n\n");
 
-        if (strlen(saved_message) > 0) {
-            printf("%s\n", saved_message);
-        }
+            if (strlen(saved_message) > 0) {
+                printf("%s\n", saved_message);
+            }
 
-        if (num_entries < 0) {
-            printf("Error reading hosts file.\n");
-        } else {
-            printf("Found %d host entries:\n", num_entries);
-        }
-        
-        // Print host entries
-        for (int i = 0; i < num_entries; i++) {
-            if (i == selected_entry) {
-                printf("> ");
+            if (num_entries < 0) {
+                printf("Error reading hosts file.\n");
             } else {
-                printf("  ");
+                printf("Found %d host entries:\n", num_entries);
             }
-            printf("[%c] %s %s\n",
-                   entries[i].enabled ? 'X' : ' ',
-                   entries[i].ip_address,
-                   entries[i].hostname);
-        }
+            
+            for (int i = 0; i < num_entries; i++) {
+                if (i == selected_entry) {
+                    printf("> ");
+                } else {
+                    printf("  ");
+                }
+                printf("[%c] %s %s\n",
+                       entries[i].enabled ? 'X' : ' ',
+                       entries[i].ip_address,
+                       entries[i].hostname);
+            }
 
-        // Update the console, sending a new frame to the display
-        consoleUpdate(NULL);
+            consoleUpdate(NULL);
+        }
     }
+
+exit_app:
 
     // Deinitialize and clean up resources used by the console (important!)
     consoleExit(NULL);
