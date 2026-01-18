@@ -32,10 +32,10 @@ include $(DEVKITPRO)/libnx/switch_rules
 #---------------------------------------------------------------------------------
 VERSION_MAJOR := 1
 VERSION_MINOR := 0
-VERSION_MICRO := 0
+VERSION_MICRO := 1
 
 APP_TITLE	:=	dns-mitm-manager
-APP_AUTHOR	:=	Jules
+APP_AUTHOR	:=	JP3402
 APP_VERSION	:=	${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_MICRO}
 
 TARGET		:=	$(subst $e ,_,$(notdir $(APP_TITLE)))
