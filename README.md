@@ -11,7 +11,7 @@ A simple homebrew application for the Nintendo Switch to manage DNS MITM hosts f
 
 ## Installation
 
-1.  Download the latest `dns-mitm-manager.nro` from the [releases page](https://github.com/your-username/dns-mitm-manager/releases).
+1.  Download the latest `dns-mitm-manager.nro` from the [releases page](https://github.com/JP3402/dns-mitm-manager/releases).
 2.  Copy `dns-mitm-manager.nro` to the `/switch/` folder on your SD card.
 3.  Launch the application from the Homebrew Menu.
 
